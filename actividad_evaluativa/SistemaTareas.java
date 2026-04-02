@@ -1,113 +1,114 @@
 public class SistemaTareas {
-    private Nodo cabeza;  // 1. Declaración de la cabeza de la lista
+    private Nodo cabeza; // 1. Declaración de la cabeza de la lista
 
     // 2. Constructor del SistemaTareas
     public SistemaTareas() {
         cabeza = null; // Inicializa la cabeza como null, es decir, la lista está vacía al principio.
     }
 
-    // 3. Método para agregar una nueva tarea
-    public void agregarTarea(String titulo, Prioridad prioridad) {
-        // Crea una nueva tarea con el título y prioridad dados
-        Tarea nuevaTarea = new Tarea(titulo, prioridad);
-        // Crea un nuevo nodo que contiene la tarea creada
-        Nodo nuevoNodo = new Nodo(nuevaTarea);
+    // Método auxiliar para determinar si la tarea A va antes que la tarea B
+    // Criterio 1: fecha de entrega (más próxima primero)
+    // Criterio 2: si fechas iguales, mayor prioridad primero
+    private boolean vaAntes(Tarea a, Tarea b) {
+        if (a.getFechaEntrega().isBefore(b.getFechaEntrega())) {
+            return true;
+        } else if (a.getFechaEntrega().isEqual(b.getFechaEntrega())) {
+            return a.getPrioridad().getValor() > b.getPrioridad().getValor();
+        }
+        return false;
+    }
 
-        // Si la lista está vacía, el nuevo nodo se convierte en la cabeza de la lista
-        if (cabeza == null) {
+    // 3. Método para agregar una nueva tarea (ordenada por fecha y prioridad)
+    public void agregar_tarea(Tarea tarea) {
+        Nodo nuevoNodo = new Nodo(tarea);
+
+        // Si la lista está vacía o la nueva tarea va antes que la cabeza
+        if (cabeza == null || vaAntes(tarea, cabeza.tarea)) {
+            nuevoNodo.siguiente = cabeza;
             cabeza = nuevoNodo;
         } else {
-            // Si no está vacía, recorre la lista hasta el último nodo
+            // Recorre la lista para encontrar la posición correcta
             Nodo actual = cabeza;
-            while (actual.siguiente != null) {
-                actual = actual.siguiente; // Se mueve al siguiente nodo
+            while (actual.siguiente != null && !vaAntes(tarea, actual.siguiente.tarea)) {
+                actual = actual.siguiente;
             }
-            // Enlaza el último nodo con el nuevo nodo
+            nuevoNodo.siguiente = actual.siguiente;
             actual.siguiente = nuevoNodo;
         }
     }
 
-    // 4. Método para eliminar una tarea dada su título
-    public void eliminarTarea(String titulo) {
-        // Si la lista está vacía, no hace nada
-        if (cabeza == null) return;
-
-        // Si la tarea que se quiere eliminar es la cabeza, la cabeza se mueve al siguiente nodo
-        if (cabeza.tarea.titulo.equalsIgnoreCase(titulo)) {
-            cabeza = cabeza.siguiente; // Se actualiza la cabeza para eliminar la tarea
-            return;
+    // 4. Método para eliminar una tarea dado su título — devuelve la tarea eliminada
+    public Tarea eliminar_tarea(String titulo) {
+        // Si la lista está vacía
+        if (cabeza == null) {
+            System.out.println("No se encontró la tarea.");
+            return null;
         }
 
-        // Si la tarea no es la cabeza, recorre la lista buscando la tarea por su título
+        // Si la tarea que se quiere eliminar es la cabeza
+        if (cabeza.tarea.getTitulo().equalsIgnoreCase(titulo)) {
+            Tarea eliminada = cabeza.tarea;
+            cabeza = cabeza.siguiente;
+            System.out.println("La tarea " + eliminada.getTitulo() + " ha sido eliminada correctamente.");
+            return eliminada;
+        }
+
+        // Si la tarea no es la cabeza, recorre la lista buscando por título
         Nodo actual = cabeza;
         while (actual.siguiente != null) {
-            // Si encuentra el título, elimina el nodo correspondiente
-            if (actual.siguiente.tarea.titulo.equalsIgnoreCase(titulo)) {
-                actual.siguiente = actual.siguiente.siguiente; // Elimina el nodo de la lista
-                return;
+            if (actual.siguiente.tarea.getTitulo().equalsIgnoreCase(titulo)) {
+                Tarea eliminada = actual.siguiente.tarea;
+                actual.siguiente = actual.siguiente.siguiente;
+                System.out.println("La tarea " + eliminada.getTitulo() + " ha sido eliminada correctamente.");
+                return eliminada;
             }
-            actual = actual.siguiente; // Se mueve al siguiente nodo
+            actual = actual.siguiente;
         }
+
+        System.out.println("No se encontró la tarea.");
+        return null;
     }
 
     // 5. Método para mostrar todas las tareas
-    public void mostrarTareas() {
+    public void mostrar_tareas() {
         Nodo actual = cabeza;
 
-        // Si la lista está vacía, muestra un mensaje
         if (actual == null) {
             System.out.println("No hay tareas.");
             return;
         }
 
-        // Recorre la lista y muestra cada tarea
         while (actual != null) {
-            System.out.println(actual.tarea); // Muestra la tarea que está en el nodo actual
-            actual = actual.siguiente; // Se mueve al siguiente nodo
-        }
-        
-
-    }
-
-    // 6. Método para marcar una tarea como completada y eliminarla
-    public void completarTarea(String titulo) {
-        // Si la lista está vacía, no hace nada
-        if (cabeza == null) return;
-
-        // Si la tarea que se quiere completar es la cabeza, marca como completada y mueve la cabeza al siguiente nodo
-        if (cabeza.tarea.titulo.equalsIgnoreCase(titulo)) {
-            cabeza.tarea.completada = true; // Marca la tarea como completada
-            cabeza = cabeza.siguiente; // Elimina la tarea (al mover la cabeza)
-            return;
-        }
-
-        // Si la tarea no es la cabeza, recorre la lista buscando la tarea por su título
-        Nodo actual = cabeza;
-        while (actual.siguiente != null) {
-            // Si encuentra la tarea por su título, la marca como completada y elimina el nodo
-            if (actual.siguiente.tarea.titulo.equalsIgnoreCase(titulo)) {
-                actual.siguiente.tarea.completada = true; // Marca la tarea como completada
-                actual.siguiente = actual.siguiente.siguiente; // Elimina el nodo de la lista
-                return;
-            }
-            actual = actual.siguiente; // Se mueve al siguiente nodo
+            System.out.println(actual.tarea);
+            System.out.println("--------------------");
+            actual = actual.siguiente;
         }
     }
 
-    // 7. Método para buscar una tarea por su título
-    public Tarea buscarTarea(String titulo) {
+    // 6. Método para buscar una tarea por título
+    public Tarea buscar_tarea(String titulo) {
         Nodo actual = cabeza;
 
-        // Recorre la lista buscando la tarea
         while (actual != null) {
-            // Si encuentra la tarea por su título, la devuelve
-            if (actual.tarea.titulo.equalsIgnoreCase(titulo)) {
+            if (actual.tarea.getTitulo().equalsIgnoreCase(titulo)) {
+                System.out.println(actual.tarea);
                 return actual.tarea;
             }
-            actual = actual.siguiente; // Se mueve al siguiente nodo
+            actual = actual.siguiente;
         }
 
-        // Si no encuentra la tarea, devuelve null
+        System.out.println("La tarea no fue encontrada.");
         return null;
+    }
+
+    // 7. Método para marcar una tarea como completada y eliminarla
+    // Reutiliza buscar_tarea y eliminar_tarea tal como recomienda el PDF
+    public Tarea marcar_completa(String titulo) {
+        Tarea tarea = buscar_tarea(titulo);
+        if (tarea != null) {
+            tarea.setEstado("Completa");
+            eliminar_tarea(titulo);
+        }
+        return tarea;
     }
 }
